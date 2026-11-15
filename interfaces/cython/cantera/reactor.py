@@ -31,6 +31,7 @@ from cython.cimports.cython import view
 from cython.cimports.cantera._utils import (
     pystr, stringify, comp_map, py_to_anymap, anymap_to_py)
 from cython.cimports.cantera.delegator import CxxDelegatorPtr, assign_delegates
+from ._utils import CanteraError
 from cython.cimports.cantera.solutionbase import _SolutionBase, _wrap_Solution
 
 from ._types import Array as _Array, ArrayLike as _ArrayLike, LogLevel as _LogLevel
@@ -2372,7 +2373,7 @@ class ReactorNet:
             residual_threshold = 10. * self.rtol
         if residual_threshold <= self.rtol:
             raise CanteraError('Residual threshold (' + str(residual_threshold) +
-                               ') should be below solver rtol (' +
+                               ') should be greater than solver rtol (' +
                                str(self.rtol) + ')')
         if return_residuals:
             residuals = np.empty(max_steps)
