@@ -643,6 +643,33 @@ class TestFreeFlame:
             fwd = (Suplus-Suminus)/(2*Su0*dk)
             assert fwd == approx(dSdk_adj[m], rel=5e-3, abs=1e-7)
 
+    def test_adjoint_sensitivities_keep_multipliers(self):
+        self.run_mix(phi=0.5, T=300, width=0.1, p=1.0, refine=True)
+        sens1 = self.sim.get_flame_speed_reaction_sensitivities()
+        self.gas.set_multiplier(2.0, 1)
+        self.sim.solve(loglevel=0, refine_grid=False)
+        sens2 = self.sim.get_flame_speed_reaction_sensitivities()
+        assert self.gas.multiplier(1) == 2.0
+        assert all(self.gas.multiplier(m) == 1.0
+                   for m in range(self.gas.n_reactions) if m != 1)
+        # the solution changed, so the sensitivities changed
+        assert sens2 != approx(sens1)
+
+        # normalized sensitivity of reaction 1, relative to its multiplier of 2
+        self.sim.flame.set_steady_tolerances(default=(1e-10, 1e-15))
+        self.sim.solve(loglevel=0, refine_grid=False)
+        sens2 = self.sim.get_flame_speed_reaction_sensitivities()
+        dk = 1e-4
+        Su0 = self.sim.velocity[0]
+        self.gas.set_multiplier(2.0 * (1+dk), 1)
+        self.sim.solve(loglevel=0, refine_grid=False)
+        Suplus = self.sim.velocity[0]
+        self.gas.set_multiplier(2.0 * (1-dk), 1)
+        self.sim.solve(loglevel=0, refine_grid=False)
+        Suminus = self.sim.velocity[0]
+        fwd = (Suplus-Suminus)/(2*Su0*dk)
+        assert fwd == approx(sens2[1], rel=5e-3, abs=1e-7)
+
     def test_jacobian_options(self):
         reactants = {'H2': 0.65, 'O2': 0.5, 'AR': 2}
         self.create_sim(p=ct.one_atm, Tin=300, reactants=reactants, width=0.03)
