@@ -1708,6 +1708,12 @@ void SolutionArray::readEntry(const string& fname, const string& name,
     string path = name;
     if (sub != "" && file.checkGroup(name + "/" + sub, true)) {
         path += "/" + sub;
+    } else if (sub != "" && file.checkGroup(name, true)
+               && file.readAttributes(name, false).hasKey("generator"))
+    {
+        // entries written by Cantera 3.0 and newer store data in sub-groups
+        throw CanteraError("SolutionArray::readEntry",
+            "Group '{}' does not contain a sub-group '{}'.", name, sub);
     } else if (sub == "" && file.checkGroup(name + "/data", true)) {
         // default data location
         path += "/data";

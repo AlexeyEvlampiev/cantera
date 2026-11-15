@@ -704,6 +704,27 @@ class TestSolutionArrayIO:
 
     @pytest.mark.skipif("native" not in ct.hdf_support(),
                         reason="Cantera compiled without HDF support")
+    def test_restore_missing_subgroup(self):
+        outfile = self.test_work_path / "solutionarray_sub.h5"
+        outfile.unlink(missing_ok=True)
+        states = ct.SolutionArray(self.gas, 3)
+        states.save(outfile, "group0", sub="one")
+
+        b = ct.SolutionArray(self.gas)
+        b.restore(outfile, "group0", sub="one")
+        assert len(b) == 3
+        c = ct.SolutionArray(self.gas)
+        with pytest.raises(ct.CanteraError, match="does not contain a sub-group 'two'"):
+            c.restore(outfile, "group0", sub="two")
+
+        yaml_file = self.test_work_path / "solutionarray_sub.yaml"
+        yaml_file.unlink(missing_ok=True)
+        states.save(yaml_file, "group0", sub="one")
+        with pytest.raises(ct.CanteraError, match="No field or solution"):
+            c.restore(yaml_file, "group0", sub="two")
+
+    @pytest.mark.skipif("native" not in ct.hdf_support(),
+                        reason="Cantera compiled without HDF support")
     def test_write_hdf_str_column(self):
         self.run_write_str_column("h5")
 
