@@ -430,6 +430,13 @@ class TestFreeFlame:
         # restart from HDF format
         self.run_restart("h5")
 
+    def test_restart_hdf_without_hdf_support(self, monkeypatch):
+        # simulate a build without native HDF support
+        monkeypatch.setattr(ct.onedim, "hdf_support", lambda: set())
+        self.create_sim(ct.one_atm, 300, 'H2:1.5, O2:1, AR:7', 0.1)
+        with pytest.raises(ct.CanteraError, match="compiled with HDF support"):
+            self.sim.set_initial_guess(data="restart.h5", group="restart")
+
     def test_restart_pandas(self):
         pd = pytest.importorskip("pandas")
         # restart from Pandas DataFrame
