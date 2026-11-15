@@ -281,6 +281,12 @@ void Reactor::addSensitivityReaction(size_t rxn)
         throw CanteraError("Reactor::addSensitivityReaction",
                            "Reaction number out of range ({})", rxn);
     }
+    for (const auto& param : m_sensParams) {
+        if (param.type == SensParameterType::reaction && param.local == rxn) {
+            throw CanteraError("Reactor::addSensitivityReaction",
+                "Sensitivity of reaction {} was already added", rxn);
+        }
+    }
 
     size_t p = network().registerSensitivityParameter(
         name()+": "+m_kin->reaction(rxn)->equation(), 1.0, 1.0);

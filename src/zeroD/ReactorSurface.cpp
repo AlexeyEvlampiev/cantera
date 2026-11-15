@@ -171,6 +171,12 @@ void ReactorSurface::addSensitivityReaction(size_t rxn)
         throw CanteraError("ReactorSurface::addSensitivityReaction",
                            "Reaction number out of range ({})", rxn);
     }
+    for (const auto& param : m_sensParams) {
+        if (param.type == SensParameterType::reaction && param.local == rxn) {
+            throw CanteraError("ReactorSurface::addSensitivityReaction",
+                "Sensitivity of reaction {} was already added", rxn);
+        }
+    }
     size_t p = m_reactors[0]->network().registerSensitivityParameter(
         m_kinetics->reaction(rxn)->equation(), 1.0, 1.0);
     m_sensParams.emplace_back(

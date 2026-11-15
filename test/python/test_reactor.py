@@ -2963,6 +2963,28 @@ class TestReactorSensitivities:
         S = net.sensitivities()
         assert S.shape == (net.n_vars, net.n_sensitivity_params)
 
+    def test_sensitivity_errors(self):
+        gas = ct.Solution('h2o2.yaml', transport_model=None)
+        gas.TPX = 1000, ct.one_atm, 'H2:2, O2:1, AR:4'
+        r1 = ct.IdealGasReactor(gas)
+        net = ct.ReactorNet([r1])
+        r1.add_sensitivity_reaction(2)
+        with pytest.raises(ct.CanteraError, match="already added"):
+            r1.add_sensitivity_reaction(2)
+        assert net.n_sensitivity_params == 1
+
+        interface = ct.Interface("diamond.yaml", "diamond_100")
+        r2 = ct.IdealGasReactor(interface.adjacent["gas"])
+        surf = ct.ReactorSurface(interface, r2, A=1.5)
+        net2 = ct.ReactorNet([r2])
+        surf.add_sensitivity_reaction(2)
+        with pytest.raises(ct.CanteraError, match="already added"):
+            surf.add_sensitivity_reaction(2)
+
+        net.step()
+        with pytest.raises(ct.CanteraError, match="after the integrator"):
+            r1.add_sensitivity_reaction(3)
+
     def test_sensitivities2(self):
         interface = ct.Interface("diamond.yaml", "diamond_100")
         gas1 = interface.adjacent["gas"]

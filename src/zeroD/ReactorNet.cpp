@@ -834,7 +834,7 @@ size_t ReactorNet::registerSensitivityParameter(
 {
     if (m_integratorInitialized) {
         throw CanteraError("ReactorNet::registerSensitivityParameter",
-                           "Sensitivity parameters cannot be added after the"
+                           "Sensitivity parameters cannot be added after the "
                            "integrator has been initialized.");
     }
     m_paramNames.push_back(name);
